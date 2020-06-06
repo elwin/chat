@@ -19,11 +19,11 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 
-	e.GET("/", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "ok")
-	})
+	e.Static("/", "/ui/build")
 
-	e.GET("/ws", func(c echo.Context) error {
+	api := e.Group("/api")
+
+	api.GET("/ws", func(c echo.Context) error {
 		upgrader := websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		}
@@ -47,7 +47,7 @@ func main() {
 		return nil
 	})
 
-	e.GET("/users", func(c echo.Context) error {
+	api.GET("/users", func(c echo.Context) error {
 		return c.JSONPretty(http.StatusOK, users, "  ")
 	})
 
