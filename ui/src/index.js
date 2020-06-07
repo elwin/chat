@@ -30,10 +30,10 @@ class App extends React.Component {
         let messages = this.state.messages
             .reduce((acc, curr) => {
                 if (acc.length === 0 || acc[acc.length - 1].username !== curr.username) {
-                    return acc.concat({username: curr.username, bodies: [curr.body]});
+                    return acc.concat({username: curr.username, messages: [curr]});
                 }
 
-                acc[acc.length - 1].bodies = acc[acc.length - 1].bodies.concat(curr.body);
+                acc[acc.length - 1].messages = acc[acc.length - 1].messages.concat(curr);
 
                 return acc;
             }, [])
@@ -41,20 +41,35 @@ class App extends React.Component {
                 <div className="row">
                     <div className="col-5 col-sm-3 col-lg-2"><small className="text-muted">{value.username}</small>
                     </div>
-                    <div className="col">{value.bodies.map((value, key) => <p className="mb-0"
-                                                                              ref={(el) => {
-                                                                                  this.bottom = el;
-                                                                              }}
-                                                                              key={key}>{value}</p>)}</div>
+                    <div className="col">{value.messages.map((message, key) => <p className="mb-0"
+                                                                                  ref={(el) => {
+                                                                                      this.bottom = el;
+                                                                                  }}
+                                                                                  key={key}>{message.body}</p>)}
+                    </div>
                 </div>
             </li>);
+
+        if (this.state.messages.length === 0) {
+            messages = <li className="list-group-item">No messages at the moment write something! 🏝️</li>
+        }
 
         let status = <span className="badge badge-success">connected</span>;
         if (!this.state.connected) {
             status = <span className="badge badge-danger">disconnected</span>;
         }
 
-        return <div className="d-flex flex-column container" style={{height: '100vh', overflow: 'hidden'}}>
+        return <div className="d-flex flex-column container overflow-hidden vh-100 pt-4">
+
+            <h2>
+                Websocket chat 🧦
+            </h2>
+            <p className="text-muted">
+                To play around a bit with websockets, I built this little chat app. It is powered by Go on the backend
+                and React on the frontend.<br/>
+                You can check out the source on <a target="_blank" href="https://github.com/elwin/chat">GitHub</a>.
+                Built️ by <a target="_blank" href="https://elwin.me">Elwin</a>.
+            </p>
 
             <div className="my-3 text-right">{status}</div>
 

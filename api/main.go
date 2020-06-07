@@ -12,8 +12,13 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
+const (
+	storageDuration = 24 * time.Hour
+	port            = 8888
+)
+
 func main() {
-	buffer := NewStringBuffer(51)
+	buffer := NewDB(51)
 	users := make([]string, 0)
 
 	e := echo.New()
@@ -51,10 +56,10 @@ func main() {
 		return c.JSONPretty(http.StatusOK, users, "  ")
 	})
 
-	log.Fatal(e.Start(":8888"))
+	log.Fatal(e.Start(fmt.Sprintf(":%d", port)))
 }
 
-func handleClient(ws *websocket.Conn, buffer *StringBuffer, username string) error {
+func handleClient(ws *websocket.Conn, buffer *DB, username string) error {
 	for _, msg := range buffer.Slice() {
 		out, err := json.Marshal(msg)
 		if err != nil {
@@ -99,14 +104,14 @@ type Message struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-type StringBuffer struct {
-	start, stop int
+type DB struct {
+	start, stop int // sort of implementation of a ring buffer
 	msg         []Message
 	subscribers map[string]func(Message) error
 }
 
-func NewStringBuffer(n int) *StringBuffer {
-	return &StringBuffer{
+func NewDB(n int) *DB {
+	return &DB{
 		start:       0,
 		stop:        0,
 		msg:         make([]Message, n),
@@ -114,15 +119,15 @@ func NewStringBuffer(n int) *StringBuffer {
 	}
 }
 
-func (b *StringBuffer) Register(username string, f func(Message) error) {
+func (b *DB) Register(username string, f func(Message) error) {
 	b.subscribers[username] = f
 }
 
-func (b *StringBuffer) Unregister(username string) {
+func (b *DB) Unregister(username string) {
 	delete(b.subscribers, username)
 }
 
-func (b *StringBuffer) Write(msg Message) {
+func (b *DB) Write(msg Message) {
 	b.msg[b.stop] = msg
 	b.stop = (b.stop + 1) % len(b.msg)
 	if b.start == b.stop {
@@ -136,9 +141,15 @@ func (b *StringBuffer) Write(msg Message) {
 	}
 }
 
-func (b *StringBuffer) Slice() []Message {
+func (b *DB) Slice() []Message {
+	cutoff := time.Now().Add(- storageDuration)
+
 	out := make([]Message, 0)
 	for i := b.start; i != b.stop; i = (i + 1) % len(b.msg) {
+		if b.msg[i].Timestamp.Before(cutoff) {
+			continue
+		}
+
 		out = append(out, b.msg[i])
 	}
 
