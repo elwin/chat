@@ -51,7 +51,7 @@ class App extends React.Component {
             </li>);
 
         if (this.state.messages.length === 0) {
-            messages = <li className="list-group-item">No messages at the moment write something! 🏝️</li>
+            messages = <li className="list-group-item">No messages at the moment. Write something! 🏝️</li>
         }
 
         let status = <span className="badge badge-success">connected</span>;
