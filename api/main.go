@@ -23,6 +23,7 @@ func main() {
 
 	e := echo.New()
 	e.Use(middleware.Logger())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{}))
 
 	e.Static("/", "/ui/build")
 
@@ -38,13 +39,18 @@ func main() {
 		}
 		defer ws.Close()
 
-		username := generateName()
-		users = append(users, username)
-		if err := handleClient(ws, buffer, username); err != nil {
+		_, username, err := ws.ReadMessage()
+		if err != nil {
+			c.Logger().Error(err)
+			return err
+		}
+
+		users = append(users, string(username))
+		if err := handleClient(ws, buffer, string(username)); err != nil {
 			c.Logger().Error(err)
 		}
 		for i, user := range users {
-			if user == username {
+			if user == string(username) {
 				users = append(users[:i], users[i+1:]...)
 			}
 		}
@@ -54,6 +60,14 @@ func main() {
 
 	api.GET("/users", func(c echo.Context) error {
 		return c.JSONPretty(http.StatusOK, users, "  ")
+	})
+
+	api.GET("/register", func(c echo.Context) error {
+		username := generateName()
+
+		return c.JSONPretty(http.StatusOK, struct {
+			Username string `json:"username"`
+		}{Username: username}, "  ")
 	})
 
 	log.Fatal(e.Start(fmt.Sprintf(":%d", port)))

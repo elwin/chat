@@ -2,17 +2,21 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.css';
+import Cookies from 'universal-cookie';
 
-let base = 'wss://chat.elwin.dev';
+let base = 'localhost:8888';
+let socketBase = 'ws://' + base;
+let restBase = 'http://' + base;
 
 class App extends React.Component {
 
-    ws = new WebSocket(base + '/api/ws');
+    ws = new WebSocket(socketBase + '/api/ws');
 
     state = {
         messages: [],
         value: "",
         connected: false,
+        username: "",
     };
 
     handleSubmit(event) {
@@ -55,7 +59,7 @@ class App extends React.Component {
         }
 
         let status = <span className="badge badge-success">connected</span>;
-        if (!this.state.connected) {
+        if (!this.state.connected || this.state.username === '') {
             status = <span className="badge badge-danger">disconnected</span>;
         }
 
@@ -98,14 +102,32 @@ class App extends React.Component {
     componentDidMount() {
 
         this.ws.onopen = () => {
-            // on connecting, do nothing but log it to the console
-            this.setState({connected: true})
+            let finishInit = () => {
+                this.ws.send(this.state.username);
+                this.setState({connected: true});
+                console.log(this.state.username);
+            };
+
+            const cookies = new Cookies();
+            let username = cookies.get('username');
+            if (username === undefined) {
+                fetch(restBase + "/api/register")
+                    .then(res => res.json())
+                    .then(res => this.setState({username: res.username}))
+                    .then(() => cookies.set('username', this.state.username))
+                    .then(() => finishInit())
+            } else {
+                this.setState({username: username});
+                finishInit();
+            }
+
+
         };
 
         this.ws.onmessage = event => {
-            let message = JSON.parse(event.data)
-            this.setState({messages: this.state.messages.concat(message)})
-            this.bottom.scrollIntoView({behavior: 'smooth'})
+            let message = JSON.parse(event.data);
+            this.setState({messages: this.state.messages.concat(message)});
+            this.bottom.scrollIntoView({behavior: 'smooth'});
         };
 
         this.ws.onclose = () => {
