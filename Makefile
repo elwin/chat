@@ -1,4 +1,5 @@
-REGISTRY=registry.digitalocean.com/studentelwin
+REGISTRY=docker.pkg.github.com/elwin
+VERSION=latest
 
 build-ui:
 	cd ui; npm run build;
@@ -10,5 +11,5 @@ build: build-api build-ui
 	docker build . -t chat
 
 publish: build
-	docker tag chat $(REGISTRY)/chat
-	docker push $(REGISTRY)/chat
+	docker tag chat $(REGISTRY)/chat/chat:$(VERSION)
+	docker push $(REGISTRY)/chat/chat:$(VERSION)

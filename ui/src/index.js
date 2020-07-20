@@ -4,9 +4,9 @@ import './index.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import Cookies from 'universal-cookie';
 
-let base = 'localhost:8888';
-let socketBase = 'ws://' + base;
-let restBase = 'http://' + base;
+let base = 'chat.elwin.dev';
+let socketBase = 'wss://' + base;
+let restBase = 'https://' + base;
 
 class App extends React.Component {
 
@@ -77,7 +77,7 @@ class App extends React.Component {
 
             <div className="my-3 text-right">{status}</div>
 
-            <div className="card mb-4" style={{overflow: 'hidden'}}>
+            <div className="card mb-4" style={{overflow: 'scroll'}}>
                 <ul className="list-group list-group-flush">
                     {messages}
                 </ul>
