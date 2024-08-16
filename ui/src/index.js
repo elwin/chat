@@ -4,7 +4,7 @@ import './index.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import Cookies from 'universal-cookie';
 
-let base = 'chat.elwin.dev';
+let base = 'chat.elwin.me';
 let socketBase = 'wss://' + base;
 let restBase = 'https://' + base;
 
